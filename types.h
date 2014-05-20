@@ -16,5 +16,4 @@ typedef struct
 } app_options_t;
 
 
-#endif	/* TYPES_H */
-
+#endif
