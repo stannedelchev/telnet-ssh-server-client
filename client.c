@@ -9,20 +9,24 @@
 
 #define KILOBYTE (1024 * 1024)
 
-#define CHECK_RESULT_AND_RETURN(result) \
+#define CHECK_RESULT_AND_EXIT(result) \
 { \
     if((result) == -1) \
     { \
         perror(NULL); \
-        return false; \
+        exit(EXIT_FAILURE); \
     } \
 }
+
+
+void sendMessage(int fSocket, char* message);
+char* receiveMessage(int fSocket);
 
 bool run_client(app_options_t options)
 {
     int fSocket = socket(AF_INET, SOCK_STREAM, 0);
 
-    CHECK_RESULT_AND_RETURN(fSocket);
+    CHECK_RESULT_AND_EXIT(fSocket);
 
     struct sockaddr_in serverAddr;
 
@@ -31,28 +35,24 @@ bool run_client(app_options_t options)
     serverAddr.sin_addr.s_addr = inet_addr(options.host);
     memset(&(serverAddr.sin_zero), '\0', 8); // zero the rest of the struct
 
-    char payload[] = "GET / HTTP/1.1\r\nUser-Agent: curl/7.32.0\r\nHost: 192.168.0.107\r\nAccept: */*\r\n\r\n";
-
     int connectOk = connect(fSocket, (struct sockaddr*) &serverAddr, sizeof (struct sockaddr_in));
-    CHECK_RESULT_AND_RETURN(connectOk);
+    CHECK_RESULT_AND_EXIT(connectOk);
 
-    int payloadLength = strlen(payload);
-    int bytesSent = send(fSocket, payload, payloadLength, 0);
-    CHECK_RESULT_AND_RETURN(bytesSent);
-
-    if (bytesSent != payloadLength)
+    const int MESSAGE_LENGTH = 256;
+    char message[MESSAGE_LENGTH];
+    while (fgets(message, MESSAGE_LENGTH, stdin))
     {
-        printf("Sent %d out of %d", bytesSent, payloadLength);
-        return false;
+        printf("%s", message);
+        if (strcmp(message, "\n") == 0 || strcmp(message, "\r\n") == 0)
+        {
+            break;
+        }
+        
+        sendMessage(fSocket, message);
+        char* serverMessage = receiveMessage(fSocket);
+        printf("%s", serverMessage);
+        free(serverMessage);
     }
-
-    char buffer[KILOBYTE + 1];
-    int bytesRead = -1;
-    bytesRead = recv(fSocket, buffer, KILOBYTE, 0);
-    CHECK_RESULT_AND_RETURN(bytesRead);
-
-    buffer[bytesRead] = 0;
-    printf("%s", buffer);
 
     shutdown(fSocket, 2);
     close(fSocket);
@@ -61,3 +61,26 @@ bool run_client(app_options_t options)
     return true;
 }
 
+void sendMessage(int fSocket, char* message)
+{
+    int messageLength = strlen(message);
+    int bytesSent = send(fSocket, message, messageLength, 0);
+    CHECK_RESULT_AND_EXIT(bytesSent);
+
+    if (bytesSent != messageLength)
+    {
+        printf("Sent %d out of %d", bytesSent, messageLength);
+        return;
+    }
+}
+
+char* receiveMessage(int fSocket)
+{
+    char *buffer = malloc(KILOBYTE * sizeof(char));
+    int bytesRead = -1;
+    bytesRead = recv(fSocket, buffer, KILOBYTE, 0);
+    CHECK_RESULT_AND_EXIT(bytesRead);
+
+    buffer[bytesRead] = 0;
+    return buffer;
+}
