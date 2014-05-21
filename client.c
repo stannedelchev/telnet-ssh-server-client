@@ -7,15 +7,22 @@
 #include <arpa/inet.h>
 #include "client.h"
 
+#define KILOBYTE (1024 * 1024)
+
+#define CHECK_RESULT_AND_RETURN(result) \
+{ \
+    if((result) == -1) \
+    { \
+        perror(NULL); \
+        return false; \
+    } \
+}
+
 bool run_client(app_options_t options)
 {
     int fSocket = socket(AF_INET, SOCK_STREAM, 0);
 
-    if (fSocket == -1)
-    {
-        printf("%d", errno);
-        return false;
-    }
+    CHECK_RESULT_AND_RETURN(fSocket);
 
     struct sockaddr_in serverAddr;
 
@@ -26,20 +33,12 @@ bool run_client(app_options_t options)
 
     char payload[] = "GET / HTTP/1.1\r\nUser-Agent: curl/7.32.0\r\nHost: 192.168.0.107\r\nAccept: */*\r\n\r\n";
 
-    if (connect(fSocket, (struct sockaddr*) &serverAddr, sizeof (struct sockaddr_in)) == -1)
-    {
-        printf("%d", errno);
-        perror(NULL);
-        return false;
-    }
+    int connectOk = connect(fSocket, (struct sockaddr*) &serverAddr, sizeof (struct sockaddr_in));
+    CHECK_RESULT_AND_RETURN(connectOk);
 
     int payloadLength = strlen(payload);
     int bytesSent = send(fSocket, payload, payloadLength, 0);
-    if (bytesSent == -1)
-    {
-        perror(NULL);
-        return false;
-    }
+    CHECK_RESULT_AND_RETURN(bytesSent);
 
     if (bytesSent != payloadLength)
     {
@@ -47,15 +46,10 @@ bool run_client(app_options_t options)
         return false;
     }
 
-    char buffer[1024 * 1024 + 1];
+    char buffer[KILOBYTE + 1];
     int bytesRead = -1;
-    bytesRead = recv(fSocket, buffer, 1024 * 1024, 0);
-    if (bytesRead == -1)
-    {
-        printf("%d", errno);
-        perror(NULL);
-        return false;
-    }
+    bytesRead = recv(fSocket, buffer, KILOBYTE, 0);
+    CHECK_RESULT_AND_RETURN(bytesRead);
 
     buffer[bytesRead] = 0;
     printf("%s", buffer);
