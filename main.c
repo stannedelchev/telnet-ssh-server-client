@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "types.h"
+#include "common.h"
 
 #include "client.h"
+#include "server.h"
 
 bool parse_arguments(int argc, char** argv, app_options_t* options)
 {
@@ -43,11 +44,6 @@ void print_usage()
     printf("Options can be either: \n");
 }
 
-void run_server(app_options_t options)
-{
-
-}
-
 int main(int argc, char** argv)
 {
     app_options_t options;
@@ -70,6 +66,7 @@ int main(int argc, char** argv)
             return EXIT_FAILURE;
     }
 
+    printf("Closed all sockets and finished.\n");
     return (EXIT_SUCCESS);
 }
 

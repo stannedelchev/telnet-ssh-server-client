@@ -2,8 +2,8 @@
 #define	CLIENT_H
 
 #include <stdbool.h>
-#include "types.h"
+#include "common.h"
 
-bool run_client(app_options_t options);
+void run_client(app_options_t options);
 #endif
 
