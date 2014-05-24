@@ -26,7 +26,13 @@ void run_client(app_options_t options)
         
         send_message(fSocket, message);
         char* serverMessage = receive_message(fSocket);
-        printf("%s", serverMessage);
+        while(strcmp(serverMessage, END_SYMBOL) != 0)
+        {
+            printf("%s", serverMessage);
+            serverMessage = receive_message(fSocket);
+        }
+        printf("%s\n", serverMessage);
+
         free(serverMessage);
     }
 

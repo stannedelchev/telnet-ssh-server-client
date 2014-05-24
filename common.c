@@ -22,7 +22,7 @@ void check_result_and_exit(int result)
 
 char* receive_message(int fSocket)
 {
-    char *buffer = malloc(KBYTE * sizeof(char));
+    char *buffer = calloc(KBYTE, sizeof(char));
     int bytesRead = -1;
     bytesRead = recv(fSocket, buffer, KBYTE, 0);
     check_result_and_exit(bytesRead);

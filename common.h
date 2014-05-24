@@ -2,7 +2,8 @@
 #define	TYPES_H
 
 #define KBYTE (1024 * 1024)
-
+#define BEG_SYMBOL "---START---\n"
+#define END_SYMBOL "---END---\n"
 typedef enum
 {
     SERVER_APP = 0,

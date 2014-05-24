@@ -41,9 +41,9 @@ void run_server(app_options_t options)
             g_shouldExit = true;
         } else
         {
-            send_message(fTheirSocket, "\n-----\n");
+            send_message(fTheirSocket, BEG_SYMBOL);
             execute_client_command(clientMessage, fTheirSocket);
-            send_message(fTheirSocket, "\n-----\n");
+            send_message(fTheirSocket, END_SYMBOL);
         }
     }
 
