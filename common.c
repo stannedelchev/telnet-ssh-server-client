@@ -5,13 +5,13 @@
 #include <unistd.h>
 #include "common.h"
 
-void closeSocket(int fSocket)
+void close_socket(int fSocket)
 {
     shutdown(fSocket, 2);
     close(fSocket);
 }
 
-void checkResultAndExit(int result)
+void check_result_and_exit(int result)
 {
     if(result == -1)
     {
@@ -20,22 +20,22 @@ void checkResultAndExit(int result)
     }
 }
 
-char* receiveMessage(int fSocket)
+char* receive_message(int fSocket)
 {
     char *buffer = malloc(KBYTE * sizeof(char));
     int bytesRead = -1;
     bytesRead = recv(fSocket, buffer, KBYTE, 0);
-    checkResultAndExit(bytesRead);
+    check_result_and_exit(bytesRead);
 
     buffer[bytesRead] = 0;
     return buffer;
 }
 
-void sendMessage(int fSocket, char* message)
+void send_message(int fSocket, char* message)
 {
     int messageLength = strlen(message);
     int bytesSent = send(fSocket, message, messageLength, 0);
-    checkResultAndExit(bytesSent);
+    check_result_and_exit(bytesSent);
 
     if (bytesSent != messageLength)
     {

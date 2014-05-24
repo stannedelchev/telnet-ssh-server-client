@@ -16,9 +16,9 @@ typedef struct
     char* host;
 } app_options_t;
 
-void closeSocket(int fSocket);
-void checkResultAndExit(int result);
-char* receiveMessage(int fSocket);
-void sendMessage(int fSocket, char* message);
+void close_socket(int fSocket);
+void check_result_and_exit(int result);
+char* receive_message(int fSocket);
+void send_message(int fSocket, char* message);
 
 #endif

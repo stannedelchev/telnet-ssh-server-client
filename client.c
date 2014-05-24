@@ -6,14 +6,13 @@
 #include <arpa/inet.h>
 #include "client.h"
 
-void sendMessage(int fSocket, char* message);
-char* receiveMessage(int fSocket);
-
-int createAndConnectSocket(app_options_t options);
+int create_socket_and_connect(app_options_t options);
+void send_message(int fSocket, char* message);
+char* receive_message(int fSocket);
 
 void run_client(app_options_t options)
 {
-    int fSocket = createAndConnectSocket(options);
+    int fSocket = create_socket_and_connect(options);
     printf("Type your commands. Empty line exits.\n");
     
     const int MESSAGE_LENGTH = 256;
@@ -25,20 +24,20 @@ void run_client(app_options_t options)
             break;
         }
         
-        sendMessage(fSocket, message);
-        char* serverMessage = receiveMessage(fSocket);
+        send_message(fSocket, message);
+        char* serverMessage = receive_message(fSocket);
         printf("%s", serverMessage);
         free(serverMessage);
     }
 
-    closeSocket(fSocket);
+    close_socket(fSocket);
 }
 
-int createAndConnectSocket(app_options_t options)
+int create_socket_and_connect(app_options_t options)
 {
     int fSocket = socket(AF_INET, SOCK_STREAM, 0);
 
-    checkResultAndExit(fSocket);
+    check_result_and_exit(fSocket);
 
     struct sockaddr_in serverAddr;
 
@@ -48,6 +47,6 @@ int createAndConnectSocket(app_options_t options)
     memset(&(serverAddr.sin_zero), '\0', 8); // zero the rest of the struct
     
     int connectOk = connect(fSocket, (struct sockaddr*) &serverAddr, sizeof (struct sockaddr_in));
-    checkResultAndExit(connectOk);
+    check_result_and_exit(connectOk);
     return fSocket;
 }

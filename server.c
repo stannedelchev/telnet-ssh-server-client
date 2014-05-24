@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
@@ -10,7 +10,8 @@
 
 bool g_shouldExit = false;
 
-int createAndBindSocket(app_options_t options);
+int create_socket_and_bind(app_options_t options);
+void execute_client_command(char* clientMessage, int fSocket);
 
 void SIGINT_handler()
 {
@@ -19,9 +20,9 @@ void SIGINT_handler()
 
 void run_server(app_options_t options)
 {
-    int fSocket = createAndBindSocket(options);
+    int fSocket = create_socket_and_bind(options);
     int isListenOk = listen(fSocket, 10);
-    checkResultAndExit(isListenOk);
+    check_result_and_exit(isListenOk);
 
     signal(SIGINT, SIGINT_handler);
 
@@ -31,7 +32,7 @@ void run_server(app_options_t options)
 
     while (!g_shouldExit)
     {
-        char* clientMessage = receiveMessage(fTheirSocket);
+        char* clientMessage = receive_message(fTheirSocket);
         if (clientMessage == NULL ||
                 strlen(clientMessage) == 0 ||
                 strcmp(clientMessage, "\n") == 0 ||
@@ -40,25 +41,20 @@ void run_server(app_options_t options)
             g_shouldExit = true;
         } else
         {
-            char prefix[] = "You sent: ";
-            int prefixLength = strlen(prefix);
-            int clientMessageLength = strlen(clientMessage);
-            char* message = malloc(sizeof (char) * (prefixLength + clientMessageLength + 2));
-            sprintf(message, "%s %s", prefix, clientMessage);
-            printf("%s", clientMessage);
-            sendMessage(fTheirSocket, message);
-            free(message);
+            send_message(fTheirSocket, "\n-----\n");
+            execute_client_command(clientMessage, fTheirSocket);
+            send_message(fTheirSocket, "\n-----\n");
         }
     }
 
-    closeSocket(fTheirSocket);
-    closeSocket(fSocket);
+    close_socket(fTheirSocket);
+    close_socket(fSocket);
 }
 
-int createAndBindSocket(app_options_t options)
+int create_socket_and_bind(app_options_t options)
 {
     int fSocket = socket(AF_INET, SOCK_STREAM, 0);
-    checkResultAndExit(fSocket);
+    check_result_and_exit(fSocket);
 
     struct sockaddr_in serverAddr;
 
@@ -68,13 +64,37 @@ int createAndBindSocket(app_options_t options)
     memset(&(serverAddr.sin_zero), '\0', 8); // zero the rest of the struct
 
     // reuse socket port
-    int REUSE_SOCKET_VALUE = 1;
-    int isSocketReuseOk = setsockopt(fSocket, SOL_SOCKET, SO_REUSEADDR, &REUSE_SOCKET_VALUE, sizeof (int));
-    checkResultAndExit(isSocketReuseOk);
+    int VALUE_REUSE_SOCKET = 1;
+    int isSocketReuseOk = setsockopt(fSocket, SOL_SOCKET, SO_REUSEADDR, &VALUE_REUSE_SOCKET, sizeof (int));
+    check_result_and_exit(isSocketReuseOk);
 
     int isBindOk = bind(fSocket, (struct sockaddr *) &serverAddr, sizeof (struct sockaddr_in));
-    checkResultAndExit(isBindOk);
-
+    check_result_and_exit(isBindOk);
 
     return fSocket;
+}
+
+void execute_client_command(char* clientMessage, int fSocket)
+{
+    char* trimmedCommand = strtok(clientMessage, "\r\n");
+    char* command = calloc(KBYTE, sizeof(char));
+    sprintf(command, "%s 2>&1", trimmedCommand);
+    FILE *fProcess = popen(command, "r");
+
+    if (fProcess == NULL)
+    {
+        return;
+    }
+
+    printf("Trying to execute \"%s\"\n", clientMessage);
+    char* buffer = calloc(KBYTE, sizeof (char));
+    while (fgets(buffer, KBYTE, fProcess) != NULL)
+    {
+        send_message(fSocket, buffer);
+    }
+
+    free(buffer);
+    free(command);
+
+    pclose(fProcess);
 }
